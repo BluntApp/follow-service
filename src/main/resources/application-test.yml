@@ -23,6 +23,7 @@ spring:
         instance:
           health-url: http://host.docker.internal:9002/actuator/health
           management-url: http://host.docker.internal:9002/actuator
+          service-url: http://host.docker.internal:9002
   data:
     mongodb:
       uri: mongodb+srv://blunt:blunt@clusterblunt-ozeey.gcp.mongodb.net/follow?retryWrites=true&w=majority

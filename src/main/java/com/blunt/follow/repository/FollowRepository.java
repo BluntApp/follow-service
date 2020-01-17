@@ -14,4 +14,6 @@ public interface FollowRepository extends MongoRepository<Follow, ObjectId> {
 
   List<Follow> findAllByBluntIdAndStatus(ObjectId bluntId, Status status);
 
+  Follow findByBluntIdAndAndFollowerId(ObjectId bluntId, ObjectId followerId);
+
 }

@@ -18,6 +18,8 @@ public class Follow {
   @JsonSerialize(using = ObjectIdSerializer.class)
   private ObjectId bluntId;
   @JsonSerialize(using = ObjectIdSerializer.class)
-  private ObjectId followedBy;
+  private ObjectId followerId;
+  private String followerName;
+  private String followerUserId;
   private Status status;
 }
