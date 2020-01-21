@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 @Service
 @Slf4j
@@ -32,7 +33,7 @@ public class FollowService {
   }
 
   private void validateFollowRequest(FollowDto followDto) {
-    Follow follow =  followRepository.findByBluntIdAndAndFollowerId(followDto.getBluntId(), followDto.getFollowerId());
+    Follow follow =  followRepository.findByBluntIdAndFollowerId(followDto.getBluntId(), followDto.getFollowerId());
     if(!ObjectUtils.isEmpty(follow)){
       if (follow.getStatus().equals(Status.ACCEPTED)) {
         throw new BluntException(BluntConstant.FOLLOWING_ALREADY, HttpStatus.CONFLICT.value(),
@@ -61,9 +62,31 @@ public class FollowService {
 
   public ResponseEntity<Object> respondFollowRequest(String bluntId, FollowDto followDto) {
     Follow follow = followRepository
-        .findByBluntIdAndAndFollowerId(new ObjectId(bluntId), followDto.getFollowerId());
+        .findByBluntIdAndFollowerId(new ObjectId(bluntId), followDto.getFollowerId());
     follow.setStatus(followDto.getStatus());
+    follow.setFollowerNickName(StringUtils.isEmpty(followDto.getFollowerNickName())?follow.getFollowerName():followDto.getFollowerNickName());
     return new ResponseEntity<>(followRepository.save(follow), HttpStatus.OK);
+  }
+
+  public ResponseEntity<Object> searchAlienByKey(String key) {
+    List<Follow> followers = followRepository.findAlienByKey(key);
+    return new ResponseEntity<>(followers, HttpStatus.OK);
+  }
+
+  public ResponseEntity<Object> checkNickName(String bluntId, String nickName) {
+    if(!validateNickName(bluntId, nickName)){
+      throw new BluntException(BluntConstant.NICKNAME_UNAVAILABLE, HttpStatus.CONFLICT.value(),
+          HttpStatus.CONFLICT);
+    }
+    return new ResponseEntity<>("Success", HttpStatus.OK);
+  }
+
+  private Boolean validateNickName(String bluntId, String nickName) {
+    if(nickName.trim().isEmpty()){
+      return true;
+    }
+    Follow follow = followRepository.findByBluntIdAndFollowerNickName(new ObjectId(bluntId), nickName);
+    return ObjectUtils.isEmpty(follow);
   }
 }
 

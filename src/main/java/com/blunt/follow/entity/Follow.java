@@ -20,6 +20,7 @@ public class Follow {
   @JsonSerialize(using = ObjectIdSerializer.class)
   private ObjectId followerId;
   private String followerName;
+  private String followerNickName;
   private String followerUserId;
   private Status status;
 }

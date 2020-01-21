@@ -21,4 +21,5 @@ public class BluntConstant {
   public static final String LOGGED_IN = "Blunt LoggedIn success" ;
   public static final String INVALID_CREDENTIAL = "Invalid Credential" ;
   public static final String MOBILE_NOT_REGISTERED = "Mobile Not Registered";
+  public static final String NICKNAME_UNAVAILABLE = "Nick Name UnAvailable";
 }

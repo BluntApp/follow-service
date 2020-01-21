@@ -5,6 +5,7 @@ import com.blunt.follow.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -38,11 +39,22 @@ public class FollowController {
     return followService.pendingFollowers(bluntId);
   }
 
+  @GetMapping("check/{nickName}")
+  public ResponseEntity<Object> checkNickName(@RequestHeader(name = "BLUNT-ID", required = true) String bluntId, @PathVariable String nickName) {
+    return followService.checkNickName(bluntId, nickName);
+  }
+
+
   @PostMapping("respond")
   public ResponseEntity<Object> respondFollowRequest(
       @RequestHeader(name = "BLUNT-ID", required = true) String bluntId,
       @RequestBody FollowDto followDto) {
     return followService.respondFollowRequest(bluntId, followDto);
+  }
+
+  @GetMapping("/search/{key}")
+  public ResponseEntity<Object> searchAlien(@RequestHeader(name = "BLUNT-ID", required = true) String bluntId,@PathVariable String key) {
+    return followService.searchAlienByKey(key);
   }
 
 }
