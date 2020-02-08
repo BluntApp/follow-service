@@ -36,3 +36,4 @@ management:
 logging:
   file:
     path: C:/Users/kpaulpa/Documents/workArea/TechnicalWork/logs/blunt-follow-service
+

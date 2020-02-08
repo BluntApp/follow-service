@@ -12,5 +12,7 @@ public interface FollowMapper {
 
   List<FollowDto> followListToFollowDtoList(List<Follow> follow);
 
+  List<Follow> followDtoListToFollowList(List<FollowDto> followDto);
+
   Follow followDtoToFollow(FollowDto followDto);
 }

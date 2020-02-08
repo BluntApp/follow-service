@@ -12,7 +12,9 @@ import org.springframework.stereotype.Repository;
 public interface FollowRepository extends MongoRepository<Follow, ObjectId>,
     CustomFollowRepository {
 
-  List<Follow> findAllByBluntId(ObjectId bluntId);
+  List<Follow> findAllByFollowerIdAndStatus(ObjectId bluntId, Status status);
+
+  List<Follow> findAllByMobileAndStatus(String mobile, Status status);
 
   List<Follow> findAllByBluntIdAndStatus(ObjectId bluntId, Status status);
 
@@ -20,4 +22,5 @@ public interface FollowRepository extends MongoRepository<Follow, ObjectId>,
 
   Follow findByBluntIdAndFollowerNickName(ObjectId bluntId, String followerNickName);
 
+  Follow findByFollowerIdAndMobile(ObjectId followerId, String mobile);
 }

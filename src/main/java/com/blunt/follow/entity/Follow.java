@@ -23,4 +23,5 @@ public class Follow {
   private String followerNickName;
   private String followerUserId;
   private Status status;
+  private String mobile;
 }

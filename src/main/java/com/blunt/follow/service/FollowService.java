@@ -8,6 +8,7 @@ import com.blunt.follow.repository.FollowRepository;
 import com.blunt.follow.type.Status;
 import com.blunt.follow.util.BluntConstant;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -25,7 +26,7 @@ public class FollowService {
   private final FollowRepository followRepository;
   private final FollowMapper followMapper;
 
-  public ResponseEntity<Object> followBlunt(FollowDto followDto){
+  public ResponseEntity<Object> followBlunt(FollowDto followDto) {
     validateFollowRequest(followDto);
     Follow follow = followMapper.followDtoToFollow(followDto);
     follow = followRepository.save(follow);
@@ -33,15 +34,26 @@ public class FollowService {
   }
 
   private void validateFollowRequest(FollowDto followDto) {
-    Follow follow =  followRepository.findByBluntIdAndFollowerId(followDto.getBluntId(), followDto.getFollowerId());
-    if(!ObjectUtils.isEmpty(follow)){
-      if (follow.getStatus().equals(Status.ACCEPTED)) {
-        throw new BluntException(BluntConstant.FOLLOWING_ALREADY, HttpStatus.CONFLICT.value(),
-            HttpStatus.CONFLICT);
-      } else {
+    Follow follow;
+    if (Objects.isNull(followDto.getMobile())) {
+      if ((followDto.getFollowerId().toString()).equals(followDto.getBluntId().toString())) {
+        throw new BluntException(BluntConstant.OWN_FOLLOW_NOT_ALLOWED,
+            HttpStatus.ACCEPTED.value(),
+            HttpStatus.ACCEPTED);
+      }
+      follow = followRepository
+          .findByBluntIdAndFollowerId(followDto.getBluntId(), followDto.getFollowerId());
+      if (!ObjectUtils.isEmpty(follow) && follow.getStatus().equals(Status.ACCEPTED)) {
+          throw new BluntException(BluntConstant.FOLLOWING_ALREADY, HttpStatus.ACCEPTED.value(),
+              HttpStatus.ACCEPTED);
+      }
+    } else {
+      follow = followRepository
+          .findByFollowerIdAndMobile(followDto.getFollowerId(), followDto.getMobile());
+      if (!ObjectUtils.isEmpty(follow)) {
         throw new BluntException(BluntConstant.FOLLOW_REQUESTED_ALREADY,
-            HttpStatus.CONFLICT.value(),
-            HttpStatus.CONFLICT);
+            HttpStatus.ACCEPTED.value(),
+            HttpStatus.ACCEPTED);
       }
     }
   }
@@ -50,6 +62,13 @@ public class FollowService {
     List<Follow> followers = followRepository.findAllByBluntIdAndStatus(new ObjectId(bluntId),
         Status.ACCEPTED);
     List<FollowDto> followDtoList = followMapper.followListToFollowDtoList(followers);
+    return new ResponseEntity<>(followDtoList, HttpStatus.OK);
+  }
+
+  public ResponseEntity<Object> following(String bluntId) {
+    List<Follow> followings = followRepository.findAllByFollowerIdAndStatus(new ObjectId(bluntId),
+        Status.ACCEPTED);
+    List<FollowDto> followDtoList = followMapper.followListToFollowDtoList(followings);
     return new ResponseEntity<>(followDtoList, HttpStatus.OK);
   }
 
@@ -63,8 +82,10 @@ public class FollowService {
   public ResponseEntity<Object> respondFollowRequest(String bluntId, FollowDto followDto) {
     Follow follow = followRepository
         .findByBluntIdAndFollowerId(new ObjectId(bluntId), followDto.getFollowerId());
-    follow.setStatus(followDto.getStatus());
-    follow.setFollowerNickName(StringUtils.isEmpty(followDto.getFollowerNickName())?follow.getFollowerName():followDto.getFollowerNickName());
+    follow.setStatus(Status.ACCEPTED);
+    follow.setFollowerNickName(
+        StringUtils.isEmpty(followDto.getFollowerNickName()) ? follow.getFollowerName()
+            : followDto.getFollowerNickName());
     return new ResponseEntity<>(followRepository.save(follow), HttpStatus.OK);
   }
 
@@ -74,7 +95,7 @@ public class FollowService {
   }
 
   public ResponseEntity<Object> checkNickName(String bluntId, String nickName) {
-    if(!validateNickName(bluntId, nickName)){
+    if (!validateNickName(bluntId, nickName)) {
       throw new BluntException(BluntConstant.NICKNAME_UNAVAILABLE, HttpStatus.CONFLICT.value(),
           HttpStatus.CONFLICT);
     }
@@ -82,11 +103,25 @@ public class FollowService {
   }
 
   private Boolean validateNickName(String bluntId, String nickName) {
-    if(nickName.trim().isEmpty()){
+    if (nickName.trim().isEmpty()) {
       return true;
     }
-    Follow follow = followRepository.findByBluntIdAndFollowerNickName(new ObjectId(bluntId), nickName);
+    Follow follow = followRepository
+        .findByBluntIdAndFollowerNickName(new ObjectId(bluntId), nickName);
     return ObjectUtils.isEmpty(follow);
+  }
+
+  public ResponseEntity<Object> updateFollowBlunt(List<FollowDto> followDtoList) {
+    followRepository.saveAll(followMapper.followDtoListToFollowList(followDtoList));
+    return new ResponseEntity<>("Success", HttpStatus.OK);
+  }
+
+  public ResponseEntity<Object> fetchInactiveFollowers(String mobile) {
+    List<Follow> inActiveFollowers = followRepository
+        .findAllByMobileAndStatus(mobile, Status.IN_ACTIVE);
+    List<FollowDto> inActiveFollowersDto = followMapper
+        .followListToFollowDtoList(inActiveFollowers);
+    return new ResponseEntity<>(inActiveFollowersDto, HttpStatus.OK);
   }
 }
 
