@@ -34,27 +34,15 @@ public class FollowService {
   }
 
   private void validateFollowRequest(FollowDto followDto) {
-    Follow follow;
-    if (Objects.isNull(followDto.getMobile())) {
-      if ((followDto.getFollowerId().toString()).equals(followDto.getBluntId().toString())) {
-        throw new BluntException(BluntConstant.OWN_FOLLOW_NOT_ALLOWED,
-            HttpStatus.ACCEPTED.value(),
+    Follow follow = followRepository.findFollowByFollowerIdAndMobile(followDto.getFollowerId(), followDto.getMobile());
+    if (!ObjectUtils.isEmpty(follow)) {
+      if (follow.getStatus().equals(Status.ACCEPTED)) {
+        throw new BluntException(BluntConstant.FOLLOWING_ALREADY, HttpStatus.ACCEPTED.value(),
             HttpStatus.ACCEPTED);
       }
-      follow = followRepository
-          .findByBluntIdAndFollowerId(followDto.getBluntId(), followDto.getFollowerId());
-      if (!ObjectUtils.isEmpty(follow) && follow.getStatus().equals(Status.ACCEPTED)) {
-          throw new BluntException(BluntConstant.FOLLOWING_ALREADY, HttpStatus.ACCEPTED.value(),
-              HttpStatus.ACCEPTED);
-      }
-    } else {
-      follow = followRepository
-          .findByFollowerIdAndMobile(followDto.getFollowerId(), followDto.getMobile());
-      if (!ObjectUtils.isEmpty(follow)) {
-        throw new BluntException(BluntConstant.FOLLOW_REQUESTED_ALREADY,
-            HttpStatus.ACCEPTED.value(),
-            HttpStatus.ACCEPTED);
-      }
+      throw new BluntException(BluntConstant.FOLLOW_REQUESTED_ALREADY,
+          HttpStatus.ACCEPTED.value(),
+          HttpStatus.ACCEPTED);
     }
   }
 

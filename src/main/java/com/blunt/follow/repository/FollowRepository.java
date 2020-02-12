@@ -22,5 +22,5 @@ public interface FollowRepository extends MongoRepository<Follow, ObjectId>,
 
   Follow findByBluntIdAndFollowerNickName(ObjectId bluntId, String followerNickName);
 
-  Follow findByFollowerIdAndMobile(ObjectId followerId, String mobile);
+  Follow findFollowByFollowerIdAndMobile(ObjectId followerId, String mobile);
 }

@@ -15,9 +15,11 @@ public class FollowDto {
   private ObjectId bluntId;
   @JsonSerialize(using = ObjectIdSerializer.class)
   private ObjectId followerId;
+  private String bluntName;
+  private String bluntNickName;
+  private String mobile;
   private String followerName;
   private String followerNickName;
   private String followerUserId;
   private Status status;
-  private String mobile;
 }

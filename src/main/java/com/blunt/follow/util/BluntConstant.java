@@ -22,5 +22,5 @@ public class BluntConstant {
   public static final String INVALID_CREDENTIAL = "Invalid Credential" ;
   public static final String MOBILE_NOT_REGISTERED = "Mobile Not Registered";
   public static final String NICKNAME_UNAVAILABLE = "Nick Name UnAvailable";
-  public static final String OWN_FOLLOW_NOT_ALLOWED = "Not allowed to follow";
+
 }
