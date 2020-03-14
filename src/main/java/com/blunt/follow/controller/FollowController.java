@@ -76,4 +76,10 @@ public class FollowController {
     return followService.searchAlienByKey(key);
   }
 
+  @GetMapping("metrics")
+  public ResponseEntity<Object> getMetrics(
+      @RequestHeader(name = "BLUNT-ID", required = true) String bluntId) {
+    return followService.getMetrics(bluntId);
+  }
+
 }

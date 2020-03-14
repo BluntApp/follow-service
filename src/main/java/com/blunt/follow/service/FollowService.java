@@ -1,14 +1,22 @@
 package com.blunt.follow.service;
 
 import com.blunt.follow.dto.FollowDto;
+import com.blunt.follow.dto.FollowMetricsDto;
 import com.blunt.follow.entity.Follow;
 import com.blunt.follow.error.BluntException;
 import com.blunt.follow.mapper.FollowMapper;
 import com.blunt.follow.repository.FollowRepository;
 import com.blunt.follow.type.Status;
 import com.blunt.follow.util.BluntConstant;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -71,6 +79,7 @@ public class FollowService {
     Follow follow = followRepository
         .findByBluntIdAndFollowerId(new ObjectId(bluntId), followDto.getFollowerId());
     follow.setStatus(Status.ACCEPTED);
+    follow.setFollowedOn(LocalDateTime.now());
     follow.setFollowerNickName(
         StringUtils.isEmpty(followDto.getFollowerNickName()) ? follow.getFollowerName()
             : followDto.getFollowerNickName());
@@ -110,6 +119,47 @@ public class FollowService {
     List<FollowDto> inActiveFollowersDto = followMapper
         .followListToFollowDtoList(inActiveFollowers);
     return new ResponseEntity<>(inActiveFollowersDto, HttpStatus.OK);
+  }
+
+  public ResponseEntity<Object> getMetrics(String bluntId) {
+    FollowMetricsDto followMetricsDto = new FollowMetricsDto();
+    followMetricsDto.setBluntId(new ObjectId(bluntId));
+    Long followerCount = followRepository.countAllByBluntIdAndStatus(followMetricsDto.getBluntId(),Status.ACCEPTED);
+    Long followingCount = followRepository.countAllByFollowerIdAndStatus(followMetricsDto.getBluntId(),Status.ACCEPTED);
+    mapFollowersDetails(followMetricsDto);
+    followMetricsDto.setTotalFollowers(followerCount);
+    followMetricsDto.setTotalFollowings(followingCount);
+    return new ResponseEntity<>(followMetricsDto, HttpStatus.OK);
+  }
+
+  private void mapFollowersDetails(FollowMetricsDto followMetricsDto) {
+    TemporalAdjuster temporalAdjuster = TemporalAdjusters.lastDayOfMonth();
+    LocalDateTime lastOneYear = LocalDateTime.now().with(temporalAdjuster).minusYears(1);
+    List<Follow> followerList = followRepository.findAllByBluntIdAndFollowedOnAfter(followMetricsDto.getBluntId(),lastOneYear);
+    Map<Month, Long> monthCountMap = followerList
+        .parallelStream()
+        .collect(Collectors.groupingBy(date -> date.getFollowedOn().getMonth(), Collectors.counting()));
+
+    ArrayList<Month> lastTwelveMonthsList = getLastTwelveMonthsList();
+    ArrayList<ArrayList<String>> listOfDataMap = new ArrayList<>();
+    lastTwelveMonthsList.forEach(month -> {
+      ArrayList<String> dataMap = new ArrayList<>();
+      dataMap.add(month.toString());
+      dataMap.add(monthCountMap.get(month)!=null?monthCountMap.get(month).toString():"0");
+      listOfDataMap.add(dataMap);
+    });
+
+    followMetricsDto.setMonthlyFollowers(listOfDataMap);
+  }
+
+  private ArrayList<Month> getLastTwelveMonthsList() {
+    TemporalAdjuster temporalAdjuster = TemporalAdjusters.lastDayOfMonth();
+    ArrayList<Month> lastTwelveMonths = new ArrayList<>();
+    for(int i=11;i>=0;i--){
+      LocalDateTime calculatedDateTime = LocalDateTime.now().with(temporalAdjuster).minusMonths(i);
+      lastTwelveMonths.add(calculatedDateTime.getMonth());
+    }
+    return lastTwelveMonths;
   }
 }
 
